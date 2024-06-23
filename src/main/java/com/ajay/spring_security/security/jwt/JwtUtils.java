@@ -10,48 +10,45 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.UUID;
+import java.util.List;
 
 @Slf4j
 @Component
 public class JwtUtils {
 
-    long nowMillis = System.currentTimeMillis();
-    Date now = new Date(nowMillis);
     @Value("${app.security.jwt.secret}")
     private String jwtSecret;
-    @Value("${app.security.jwt.expirationMin}")
-    private int jwtExpirationMin;
-    @Value("${app.security.jwt.refreshToken_expirationMin}")
-    private int jwtRefreshTokenExpirationMin;
+    @Value("${app.security.jwt.expiration}")
+    private int jwtExpiration;
+
 
     public String generateJwtToken(Authentication authentication) {
 
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        long expirationTime = System.currentTimeMillis() + jwtExpiration;
+        List<String> authorities = new ArrayList<>();
+        for (GrantedAuthority authority : userPrincipal.getAuthorities()) {
+            authorities.add(authority.getAuthority());
+        }
 
         return Jwts.builder()
-                .subject(userPrincipal.getUsername())
-                .issuedAt(now)
-                .expiration(new Date(nowMillis + jwtExpirationMin))
+                .claim("username", userPrincipal.getUsername())
+                .claim("id", userPrincipal.getId())
+                .claim("email", userPrincipal.getEmail())
+                .claim("authorities", authorities)
+                .issuedAt(new Date())
+                .expiration(new Date(expirationTime))
                 .signWith(key())
                 .compact();
     }
 
-    public String generateRefreshToken(Authentication authentication) {
-        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-
-        return Jwts.builder()
-                .subject(userPrincipal.getUsername())
-                .id(UUID.randomUUID().toString())
-                .issuedAt(now)
-                .expiration(new Date(nowMillis + jwtRefreshTokenExpirationMin))
-                .signWith(key())
-                .compact();
-    }
 
     private SecretKey key() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
@@ -61,7 +58,23 @@ public class JwtUtils {
 
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parser().verifyWith(key()).build()
-                .parseSignedClaims(token).getPayload().getSubject();
+                .parseSignedClaims(token).getPayload().get("authorities", String.class);
+    }
+
+    public List<SimpleGrantedAuthority> getAuthoritiesFromJwtToken(String token) {
+        List<?> rawAuthorities = Jwts.parser().verifyWith(key()).build()
+                .parseSignedClaims(token).getPayload().get("authorities", List.class);
+        List<String> authorities = new ArrayList<>();
+        for (Object authority : rawAuthorities) {
+            if (authority instanceof String) {
+                authorities.add((String) authority);
+            } else {
+                throw new IllegalArgumentException("Invalid authority value in token");
+            }
+        }
+        return authorities.stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
     }
 
 

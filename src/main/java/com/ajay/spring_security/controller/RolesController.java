@@ -1,5 +1,6 @@
 package com.ajay.spring_security.controller;
 
+import com.ajay.spring_security.dto.request.AssignRoleRequest;
 import com.ajay.spring_security.dto.response.MessageResponse;
 import com.ajay.spring_security.models.Role;
 import com.ajay.spring_security.service.RolesService;
@@ -34,6 +35,13 @@ public class RolesController {
     public ResponseEntity<MessageResponse> addRole(@RequestBody @Valid Role role) {
         log.info("request from client {}", role);
         MessageResponse response = rolesService.addRole(role);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/assignRoles")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MessageResponse> assignRolesToUser(@RequestBody @Valid AssignRoleRequest assignRoleRequest) {
+        MessageResponse response = rolesService.assignRolesToUser(assignRoleRequest);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

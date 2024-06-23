@@ -3,12 +3,11 @@ spring:
     name: spring-security
 
 mongo:
-  connectionString: ${connection_string}
+  connectionString: mongodb+srv://ajay:ajay@dev-cluster.kkevhqw.mongodb.net/?retryWrites=true&w=majority&appName=dev-cluster
   db_name: spring-security
 
 app:
   security:
     jwt:
       secret: aWlnY3BjYzc4NDk0OGpkZW5TRkhHNTY4dzg4MzczZ3dndXkzZ3VnZQ==
-      expirationMin: 120
-      refreshToken_expirationMin: 10080
+      expiration: 3600000

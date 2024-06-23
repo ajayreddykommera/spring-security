@@ -25,7 +25,7 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        log.info("request to client {}", loginRequest);
+        log.info("request from client {}", loginRequest);
         JwtResponse response = authService.authenticateUser(loginRequest);
         log.info("response to client {}", response);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -33,7 +33,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        log.info("request to client {}", signUpRequest);
+        log.info("request from client {}", signUpRequest);
         MessageResponse response = authService.registerUser(signUpRequest);
         log.info("response to client {}", response);
         return new ResponseEntity<>(response, HttpStatus.CREATED);

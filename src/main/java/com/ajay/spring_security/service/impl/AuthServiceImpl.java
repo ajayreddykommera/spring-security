@@ -52,8 +52,6 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         // Generate jwt token
         String jwtToken = jwtUtils.generateJwtToken(authentication);
-        // Generate refresh token
-        String refreshToken = jwtUtils.generateRefreshToken(authentication);
         log.info("jwtToken generated...");
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
@@ -61,7 +59,6 @@ public class AuthServiceImpl implements AuthService {
                 .collect(Collectors.toList());
         JwtResponse jwtResponse = new JwtResponse();
         jwtResponse.setToken(jwtToken);
-        jwtResponse.setRefreshToken(refreshToken);
         jwtResponse.setUsername(userDetails.getUsername());
         jwtResponse.setId(userDetails.getId());
         jwtResponse.setRoles(roles);
